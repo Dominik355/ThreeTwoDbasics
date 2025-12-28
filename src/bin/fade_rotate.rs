@@ -1,4 +1,5 @@
 use minifb::{Key, Window, WindowOptions};
+use three_two_d_basics::draw_line;
 
 const WIDTH: usize = 800;
 const HEIGHT: usize = 800;
@@ -22,37 +23,19 @@ fn main() {
 
     let size = (WIDTH, HEIGHT);
     let mut buffer = [0x000000; WIDTH * HEIGHT];
-    let object = Object::Circle { radius: 9 };
+    let object = Object::Circle { radius: 3 };
 
     let mut delta_z = 0.0;
     buffer.fill(0x000000);
-
-    // every negative 'z' means the object is "behind us"
-    let vertices = [
-        (1., 1., -1.),
-        (-1., 1., -1.),
-        (-1., -1., -1.),
-        (1., -1., -1.),
-        (1., 1., 1.),
-        (-1., 1., 1.),
-        (-1., -1., 1.),
-        (1., -1., 1.),
-    ];
-
-    // lines between vertices (indexing vertices array)
-    let lines = [
-        vec![0, 1, 2, 3],
-        vec![4, 5, 6, 7],
-        vec![0, 4],
-        vec![1, 5],
-        vec![2, 6],
-        vec![3, 7],
-    ];
 
     let mut angle = 0.;
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         buffer.fill(0x000000);
+
+        // replace with cube (or make your own)
+        let vertices = three_two_d_basics::penguin::VERTICES;
+        let lines = three_two_d_basics::penguin::LINE_INDEXES;
 
         // -- [start] Rendering
         for xyz in vertices {
@@ -82,7 +65,7 @@ fn main() {
                     size.1,
                 );
 
-                bresenham(&mut buffer, a_x, a_y, b_x, b_y, size.0, size.1, POINT_COLOR);
+                let _ = draw_line(&mut buffer, a_x, a_y, b_x, b_y, POINT_COLOR, size.0);
 
                 i += 1;
             }
@@ -123,49 +106,6 @@ fn rotate_xz((x, y, z): (f32, f32, f32), angle: f32) -> (f32, f32, f32) {
     let s = angle.sin();
     let c = angle.cos();
     (x * c - z * s, y, x * s + z * c)
-}
-
-#[allow(clippy::too_many_arguments)]
-fn bresenham(
-    buffer: &mut [u32],
-    x0: usize,
-    y0: usize,
-    x1: usize,
-    y1: usize,
-    width: usize,
-    height: usize,
-    color: u32,
-) {
-    let mut x0 = x0 as isize;
-    let mut y0 = y0 as isize;
-    let x1 = x1 as isize;
-    let y1 = y1 as isize;
-
-    let dx = (x1 - x0).abs();
-    let dy = -(y1 - y0).abs();
-    let sx = if x0 < x1 { 1 } else { -1 };
-    let sy = if y0 < y1 { 1 } else { -1 };
-    let mut err = dx + dy;
-
-    loop {
-        if x0 >= 0 && x0 < width as isize && y0 >= 0 && y0 < height as isize {
-            buffer[y0 as usize * width + x0 as usize] = color;
-        }
-
-        if x0 == x1 && y0 == y1 {
-            break;
-        }
-
-        let e2 = 2 * err;
-        if e2 >= dy {
-            err += dy;
-            x0 += sx;
-        }
-        if e2 <= dx {
-            err += dx;
-            y0 += sy;
-        }
-    }
 }
 
 #[allow(dead_code)]
